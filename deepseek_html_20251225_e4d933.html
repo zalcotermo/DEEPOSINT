@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced OSINT Phone Intelligence Platform</title>
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --danger: #e94560;
+            --success: #00b894;
+            --text: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            border: 1px solid var(--accent);
+        }
+        
+        h1 {
+            color: var(--success);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        
+        .disclaimer {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid var(--danger);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+        
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section, .results-section {
+            background: rgba(0,0,0,0.3);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid var(--accent);
+        }
+        
+        .api-config {
+            background: rgba(15, 52, 96, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .api-key-input {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        input, select, button {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: rgba(0,0,0,0.5);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus {
+            outline: 2px solid var(--accent);
+            border-color: transparent;
+        }
+        
+        .phone-input-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        #phoneNumber {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .search-btn {
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,184,148,0.3);
+        }
+        
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .bulk-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: rgba(0,0,0,0.5);
+            color: var(--text);
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 5px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid transparent;
+            border-bottom: none;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: var(--accent);
+            border-color: #444;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-card {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: transform 0.3s;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .result-title {
+            color: var(--success);
+            font-size: 1.2em;
+        }
+        
+        .result-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background: rgba(0,184,148,0.2);
+            color: var(--success);
+        }
+        
+        .status-error {
+            background: rgba(233,69,96,0.2);
+            color: var(--danger);
+        }
+        
+        .status-warning {
+            background: rgba(255,193,7,0.2);
+            color: #ffc107;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .data-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        
+        .data-label {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .data-value {
+            font-size: 1em;
+            word-break: break-word;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top: 5px solid var(--success);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .map-container {
+            height: 300px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .export-btn {
+            padding: 10px 20px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #0d2b4e;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #aaa;
+            font-size: 0.9em;
+            border-top: 1px solid #444;
+        }
+    </style>
+    <!-- Leaflet for mapping -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🕵️ Advanced OSINT Phone Intelligence</h1>
+            <p class="subtitle">Comprehensive Phone Number Analysis Tool | Multi-API Integration | Security Research Platform</p>
+            <div class="disclaimer">
+                ⚠️ <strong>LEGAL DISCLAIMER:</strong> This tool is for legitimate security research, penetration testing with authorization, and cybersecurity investigations only. Always comply with local laws and regulations. Unauthorized use for harassment, stalking, or illegal activities is strictly prohibited.
+            </div>
+        </header>
+        
+        <div class="main-panel">
+            <div class="input-section">
+                <h2>📡 Configuration & Input</h2>
+                
+                <div class="api-config">
+                    <h3>API Keys Configuration</h3>
+                    <div class="api-grid">
+                        <div class="api-key-input">
+                            <label for="numverifyKey">NumVerify API Key</label>
+                            <input type="text" id="numverifyKey" placeholder="Enter NumVerify API key">
+                        </div>
+                        <div class="api-key-input">
+                            <label for="opencageKey">OpenCage (Geocoding)</label>
+                            <input type="text" id="opencageKey" placeholder="Enter OpenCage API key">
+                        </div>
+                        <div class="api-key-input">
+                            <label for="whoisxmlKey">WhoisXML API Key</label>
+                            <input type="text" id="whoisxmlKey" placeholder="Enter WhoisXML API key">
+                        </div>
+                        <div class="api-key-input">
+                            <label for="socialSearcherKey">Social Searcher Key</label>
+                            <input type="text" id="socialSearcherKey" placeholder="Enter Social Searcher key">
+                        </div>
+                    </div>
+                    
+                    <button id="saveConfig" class="search-btn">💾 Save API Configuration</button>
+                    <button id="clearConfig" class="export-btn">🗑️ Clear All</button>
+                </div>
+                
+                <div class="phone-input-container">
+                    <input type="text" id="phoneNumber" placeholder="+1 234 567 8900 (with country code)">
+                    <button id="searchBtn" class="search-btn">🔍 Deep Search</button>
+                </div>
+                
+                <select id="searchDepth">
+                    <option value="basic">Basic Scan (Fast)</option>
+                    <option value="deep" selected>Deep Search (Comprehensive)</option>
+                    <option value="aggressive">Aggressive OSINT (All APIs)</option>
+                </select>
+                
+                <div class="bulk-section">
+                    <h3>📁 Bulk Phone Number Analysis</h3>
+                    <textarea id="bulkNumbers" placeholder="Enter multiple phone numbers (one per line)
++12345678901
++441234567890
++81312345678"></textarea>
+                    <button id="bulkSearchBtn" class="search-btn" style="margin-top: 10px; width: 100%;">
+                        📊 Analyze Bulk Numbers
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2>📊 Intelligence Results</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Running deep OSINT analysis...</p>
+                    <p id="currentTask">Initializing systems...</p>
+                </div>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="overview">Overview</div>
+                        <div class="tab" data-tab="geolocation">Geolocation</div>
+                        <div class="tab" data-tab="carrier">Carrier & Line Type</div>
+                        <div class="tab" data-tab="social">Social Media</div>
+                        <div class="tab" data-tab="technical">Technical Data</div>
+                    </div>
+                    
+                    <div id="overview" class="tab-content active">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-title">Phone Number Intelligence Report</div>
+                                <div class="result-status status-warning">Awaiting Input</div>
+                            </div>
+                            <p>Enter a phone number and click "Deep Search" to begin analysis.</p>
+                            <p>This tool will analyze:</p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Carrier and line type information</li>
+                                <li>Geolocation data (country, region, city)</li>
+                                <li>Cell tower data (if available)</li>
+                                <li>Social media presence</li>
+                                <li>WHOIS and domain information</li>
+                                <li>Possible data breaches</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div id="geolocation" class="tab-content">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-title">Geolocation Data</div>
+                                <div class="result-status status-warning">No Data</div>
+                            </div>
+                            <div class="data-grid">
+                                <div class="data-item">
+                                    <div class="data-label">Country</div>
+                                    <div class="data-value" id="geo-country">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Region/State</div>
+                                    <div class="data-value" id="geo-region">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">City</div>
+                                    <div class="data-value" id="geo-city">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Timezone</div>
+                                    <div class="data-value" id="geo-timezone">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Coordinates</div>
+                                    <div class="data-value" id="geo-coords">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Accuracy</div>
+                                    <div class="data-value" id="geo-accuracy">-</div>
+                                </div>
+                            </div>
+                            <div class="map-container">
+                                <div id="map"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="carrier" class="tab-content">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-title">Carrier & Line Information</div>
+                                <div class="result-status status-warning">No Data</div>
+                            </div>
+                            <div class="data-grid">
+                                <div class="data-item">
+                                    <div class="data-label">Carrier Name</div>
+                                    <div class="data-value" id="carrier-name">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Line Type</div>
+                                    <div class="data-value" id="line-type">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Number Valid</div>
+                                    <div class="data-value" id="number-valid">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Country Code</div>
+                                    <div class="data-value" id="country-code">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Local Format</div>
+                                    <div class="data-value" id="local-format">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">International</div>
+                                    <div class="data-value" id="international">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="social" class="tab-content">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-title">Social Media Presence</div>
+                                <div class="result-status status-warning">No Data</div>
+                            </div>
+                            <div class="data-grid" id="social-grid">
+                                <!-- Social media results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="technical" class="tab-content">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-title">Technical Data & Metadata</div>
+                                <div class="result-status status-warning">No Data</div>
+                            </div>
+                            <div class="data-grid">
+                                <div class="data-item">
+                                    <div class="data-label">Number Type</div>
+                                    <div class="data-value" id="tech-type">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Possible VoIP</div>
+                                    <div class="data-value" id="tech-voip">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Prepaid</div>
+                                    <div class="data-value" id="tech-prepaid">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Risk Score</div>
+                                    <div class="data-value" id="tech-risk">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Data Breaches</div>
+                                    <div class="data-value" id="tech-breaches">-</div>
+                                </div>
+                                <div class="data-item">
+                                    <div class="data-label">Last Updated</div>
+                                    <div class="data-value" id="tech-updated">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="export-buttons">
+                    <button id="exportJSON" class="export-btn">📥 Export JSON</button>
+                    <button id="exportCSV" class="export-btn">📊 Export CSV</button>
+                    <button id="exportPDF" class="export-btn">📄 Export Report</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Advanced OSINT Phone Intelligence Tool v2.1 | For Security Research Only</p>
+            <p>Integrates: NumVerify, OpenCage, WhoisXML, Social Searcher, libphonenumber, and more</p>
+            <p style="margin-top: 10px; font-size: 0.8em; color: #666;">
+                Note: This is a frontend demonstration. Backend API integration required for full functionality.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let map = null;
+        let currentResults = {};
+        let apiConfig = {};
+        
+        // DOM Elements
+        const phoneInput = document.getElementById('phoneNumber');
+        const searchBtn = document.getElementById('searchBtn');
+        const bulkSearchBtn = document.getElementById('bulkSearchBtn');
+        const loading = document.getElementById('loading');
+        const currentTask = document.getElementById('currentTask');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const saveConfigBtn = document.getElementById('saveConfig');
+        const clearConfigBtn = document.getElementById('clearConfig');
+        const exportJSONBtn = document.getElementById('exportJSON');
+        const exportCSVBtn = document.getElementById('exportCSV');
+        const exportPDFBtn = document.getElementById('exportPDF');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedConfig();
+            initMap();
+            initEventListeners();
+            initTabs();
+        });
+        
+        function initEventListeners() {
+            searchBtn.addEventListener('click', performSearch);
+            bulkSearchBtn.addEventListener('click', performBulkSearch);
+            saveConfigBtn.addEventListener('click', saveConfig);
+            clearConfigBtn.addEventListener('click', clearConfig);
+            
+            exportJSONBtn.addEventListener('click', () => exportData('json'));
+            exportCSVBtn.addEventListener('click', () => exportData('csv'));
+            exportPDFBtn.addEventListener('click', () => exportData('pdf'));
+            
+            phoneInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+        }
+        
+        function initTabs() {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }
+        
+        function initMap() {
+            // Initialize leaflet map
+            map = L.map('map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+        
+        function loadSavedConfig() {
+            const saved = localStorage.getItem('osintPhoneConfig');
+            if (saved) {
+                apiConfig = JSON.parse(saved);
+                document.getElementById('numverifyKey').value = apiConfig.numverifyKey || '';
+                document.getElementById('opencageKey').value = apiConfig.opencageKey || '';
+                document.getElementById('whoisxmlKey').value = apiConfig.whoisxmlKey || '';
+                document.getElementById('socialSearcherKey').value = apiConfig.socialSearcherKey || '';
+            }
+        }
+        
+        function saveConfig() {
+            apiConfig = {
+                numverifyKey: document.getElementById('numverifyKey').value,
+                opencageKey: document.getElementById('opencageKey').value,
+                whoisxmlKey: document.getElementById('whoisxmlKey').value,
+                socialSearcherKey: document.getElementById('socialSearcherKey').value
+            };
+            
+            localStorage.setItem('osintPhoneConfig', JSON.stringify(apiConfig));
+            alert('API Configuration Saved Locally');
+        }
+        
+        function clearConfig() {
+            if (confirm('Clear all API keys and configuration?')) {
+                localStorage.removeItem('osintPhoneConfig');
+                document.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
+                apiConfig = {};
+            }
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.querySelector('.result-status');
+            statusEl.textContent = message;
+            statusEl.className = 'result-status';
+            
+            if (type === 'success') statusEl.classList.add('status-success');
+            else if (type === 'error') statusEl.classList.add('status-error');
+            else if (type === 'warning') statusEl.classList.add('status-warning');
+            
+            currentTask.textContent = message;
+        }
+        
+        function updateLoading(show, message = '') {
+            if (show) {
+                loading.classList.add('active');
+                if (message) currentTask.textContent = message;
+            } else {
+                loading.classList.remove('active');
+            }
+        }
+        
+        async function performSearch() {
+            const phoneNumber = phoneInput.value.trim();
+            if (!phoneNumber) {
+                alert('Please enter a phone number');
+                return;
+            }
+            
+            updateLoading(true, 'Validating phone number format...');
+            
+            // Validate phone number format
+            if (!validatePhoneNumber(phoneNumber)) {
+                updateLoading(false);
+                updateStatus('Invalid phone number format', 'error');
+                return;
+            }
+            
+            const searchDepth = document.getElementById('searchDepth').value;
+            
+            try {
+                updateLoading(true, 'Starting OSINT analysis...');
+                
+                // Simulate API calls (in real implementation, these would be actual API calls)
+                const results = await simulateOSINTAnalysis(phoneNumber, searchDepth);
+                currentResults = results;
+                
+                // Update UI with results
+                displayResults(results);
+                updateLoading(false);
+                updateStatus('Analysis Complete', 'success');
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                updateLoading(false);
+                updateStatus('Analysis Failed: ' + error.message, 'error');
+            }
+        }
+        
+        async function performBulkSearch() {
+            const bulkText = document.getElementById('bulkNumbers').value.trim();
+            if (!bulkText) {
+                alert('Please enter phone numbers for bulk analysis');
+                return;
+            }
+            
+            const numbers = bulkText.split('\n')
+                .map(num => num.trim())
+                .filter(num => num.length > 5);
+            
+            if (numbers.length === 0) {
+                alert('No valid phone numbers found');
+                return;
+            }
+            
+            if (numbers.length > 50) {
+                alert(`Too many numbers (${numbers.length}). Maximum 50 for bulk analysis.`);
+                return;
+            }
+            
+            updateLoading(true, `Analyzing ${numbers.length} phone numbers...`);
+            
+            try {
+                // Process each number (simulated)
+                const bulkResults = [];
+                for (let i = 0; i < Math.min(numbers.length, 5); i++) { // Limit for demo
+                    updateLoading(true, `Analyzing number ${i+1} of ${Math.min(numbers.length, 5)}...`);
+                    const result = await simulateOSINTAnalysis(numbers[i], 'basic');
+                    bulkResults.push(result);
+                }
+                
+                // For demo, show first result
+                if (bulkResults.length > 0) {
+                    currentResults = bulkResults[0];
+                    displayResults(bulkResults[0]);
+                }
+                
+                updateLoading(false);
+                updateStatus(`Bulk analysis complete: ${bulkResults.length} numbers processed`, 'success');
+                
+            } catch (error) {
+                updateLoading(false);
+                updateStatus('Bulk analysis failed', 'error');
+            }
+        }
+        
+        function validatePhoneNumber(phone) {
+            // Basic international phone validation
+            const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+            return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+        }
+        
+        async function simulateOSINTAnalysis(phoneNumber, depth) {
+            // This simulates API calls - replace with actual API implementations
+            
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Generate realistic mock data
+                    const mockData = generateMockData(phoneNumber, depth);
+                    resolve(mockData);
+                }, 2000);
+            });
+        }
+        
+        function generateMockData(phoneNumber, depth) {
+            // Country detection based on country code
+            let country = "United States";
+            let countryCode = "US";
+            let carrier = "AT&T Mobility";
+            let lineType = "Mobile";
+            
+            if (phoneNumber.startsWith('+44')) {
+                country = "United Kingdom";
+                countryCode = "GB";
+                carrier = "Vodafone UK";
+            } else if (phoneNumber.startsWith('+91')) {
+                country = "India";
+                countryCode = "IN";
+                carrier = "Airtel";
+            } else if (phoneNumber.startsWith('+49')) {
+                country = "Germany";
+                countryCode = "DE";
+                carrier = "Deutsche Telekom";
+            }
+            
+            // Geolocation mock data
+            const geolocations = {
+                "US": { city: "New York", region: "NY", lat: 40.7128, lng: -74.0060, timezone: "America/New_York" },
+                "GB": { city: "London", region: "England", lat: 51.5074, lng: -0.1278, timezone: "Europe/London" },
+                "IN": { city: "Mumbai", region: "Maharashtra", lat: 19.0760, lng: 72.8777, timezone: "Asia/Kolkata" },
+                "DE": { city: "Berlin", region: "Berlin", lat: 52.5200, lng: 13.4050, timezone: "Europe/Berlin" }
+            };
+            
+            const geo = geolocations[countryCode] || { 
+                city: "Unknown", 
+                region: "Unknown", 
+                lat: 20 + Math.random() * 50, 
+                lng: -10 + Math.random() * 60,
+                timezone: "UTC"
+            };
+            
+            // Social media mock
+            const socialPlatforms = [
+                { name: "Facebook", url: "https://facebook.com/search?q=" + encodeURIComponent(phoneNumber), found: Math.random() > 0.5 },
+                { name: "Twitter", url: "https://twitter.com/search?q=" + encodeURIComponent(phoneNumber), found: Math.random() > 0.7 },
+                { name: "Instagram", url: "https://instagram.com/search?q=" + encodeURIComponent(phoneNumber), found: Math.random() > 0.6 },
+                { name: "LinkedIn", url: "https://linkedin.com/search?q=" + encodeURIComponent(phoneNumber), found: Math.random() > 0.4 },
+                { name: "Telegram", url: "https://t.me/search?q=" + encodeURIComponent(phoneNumber), found: Math.random() > 0.3 },
+                { name: "WhatsApp", url: "https://wa.me/" + phoneNumber.replace('+', ''), found: true }
+            ];
+            
+            return {
+                phoneNumber,
+                basicInfo: {
+                    valid: true,
+                    country,
+                    countryCode,
+                    carrier,
+                    lineType: lineType,
+                    localFormat: phoneNumber.replace('+', '0'),
+                    international: phoneNumber,
+                    location: geo.city + ", " + geo.region + ", " + country
+                },
+                geolocation: {
+                    country,
+                    region: geo.region,
+                    city: geo.city,
+                    timezone: geo.timezone,
+                    coordinates: `${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}`,
+                    accuracy: depth === 'aggressive' ? 'High (Cell Tower)' : 'Medium (Carrier)',
+                    lat: geo.lat,
+                    lng: geo.lng
+                },
+                social: socialPlatforms,
+                technical: {
+                    type: lineType,
+                    voip: Math.random() > 0.8 ? 'Possible' : 'Unlikely',
+                    prepaid: Math.random() > 0.5 ? 'Possible' : 'Unlikely',
+                    riskScore: Math.floor(Math.random() * 100),
+                    breaches: Math.floor(Math.random() * 3),
+                    updated: new Date().toISOString().split('T')[0]
+                },
+                metadata: {
+                    searchDepth: depth,
+                    timestamp: new Date().toISOString(),
+                    apisUsed: ['NumVerify', 'OpenCage', 'libphonenumber']
+                }
+            };
+        }
+        
+        function displayResults(results) {
+            // Update Overview
+            document.querySelector('#overview .result-status').textContent = 'Analysis Complete';
+            document.querySelector('#overview .result-status').className = 'result-status status-success';
+            
+            // Update Geolocation tab
+            document.getElementById('geo-country').textContent = results.geolocation.country;
+            document.getElementById('geo-region').textContent = results.geolocation.region;
+            document.getElementById('geo-city').textContent = results.geolocation.city;
+            document.getElementById('geo-timezone').textContent = results.geolocation.timezone;
+            document.getElementById('geo-coords').textContent = results.geolocation.coordinates;
+            document.getElementById('geo-accuracy').textContent = results.geolocation.accuracy;
+            
+            // Update map
+            if (results.geolocation.lat && results.geolocation.lng) {
+                map.setView([results.geolocation.lat, results.geolocation.lng], 10);
+                L.marker([results.geolocation.lat, results.geolocation.lng])
+                    .addTo(map)
+                    .bindPopup(`<b>${results.phoneNumber}</b><br>${results.geolocation.city}, ${results.geolocation.region}`)
+                    .openPopup();
+            }
+            
+            // Update Carrier tab
+            document.getElementById('carrier-name').textContent = results.basicInfo.carrier;
+            document.getElementById('line-type').textContent = results.basicInfo.lineType;
+            document.getElementById('number-valid').textContent = results.basicInfo.valid ? 'Valid ✓' : 'Invalid ✗';
+            document.getElementById('country-code').textContent = results.basicInfo.countryCode;
+            document.getElementById('local-format').textContent = results.basicInfo.localFormat;
+            document.getElementById('international').textContent = results.basicInfo.international;
+            
+            // Update Social tab
+            const socialGrid = document.getElementById('social-grid');
+            socialGrid.innerHTML = '';
+            
+            results.social.forEach(platform => {
+                const div = document.createElement('div');
+                div.className = 'data-item';
+                div.innerHTML = `
+                    <div class="data-label">${platform.name}</div>
+                    <div class="data-value">
+                        ${platform.found ? 
+                            `<a href="${platform.url}" target="_blank" style="color: var(--success);">Found ✓</a>` : 
+                            '<span style="color: #aaa;">Not Found</span>'}
+                    </div>
+                `;
+                socialGrid.appendChild(div);
+            });
+            
+            // Update Technical tab
+            document.getElementById('tech-type').textContent = results.technical.type;
+            document.getElementById('tech-voip').textContent = results.technical.voip;
+            document.getElementById('tech-prepaid').textContent = results.technical.prepaid;
+            document.getElementById('tech-risk').textContent = `${results.technical.riskScore}/100`;
+            document.getElementById('tech-breaches').textContent = results.technical.breaches > 0 ? 
+                `${results.technical.breaches} found` : 'None detected';
+            document.getElementById('tech-updated').textContent = results.technical.updated;
+            
+            // Update status indicators
+            document.querySelectorAll('.result-status.status-warning').forEach(el => {
+                el.textContent = 'Data Available';
+                el.className = 'result-status status-success';
+            });
+        }
+        
+        function exportData(format) {
+            if (!currentResults || Object.keys(currentResults).length === 0) {
+                alert('No data to export. Please perform a search first.');
+                return;
+            }
+            
+            let dataStr, filename;
+            
+            switch(format) {
+                case 'json':
+                    dataStr = JSON.stringify(currentResults, null, 2);
+                    filename = `osint-phone-${currentResults.phoneNumber.replace('+', '')}.json`;
+                    downloadFile(dataStr, filename, 'application/json');
+                    break;
+                    
+                case 'csv':
+                    // Create simplified CSV
+                    const csvRows = [];
+                    csvRows.push(['Field', 'Value']);
+                    csvRows.push(['Phone Number', currentResults.phoneNumber]);
+                    csvRows.push(['Carrier', currentResults.basicInfo.carrier]);
+                    csvRows.push(['Country', currentResults.geolocation.country]);
+                    csvRows.push(['City', currentResults.geolocation.city]);
+                    csvRows.push(['Line Type', currentResults.basicInfo.lineType]);
+                    csvRows.push(['Valid', currentResults.basicInfo.valid]);
+                    csvRows.push(['Risk Score', currentResults.technical.riskScore]);
+                    
+                    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                    filename = `osint-phone-${currentResults.phoneNumber.replace('+', '')}.csv`;
+                    downloadFile(csvContent, filename, 'text/csv');
+                    break;
+                    
+                case 'pdf':
+                    alert('PDF export would require a backend service. JSON or CSV recommended.');
+                    break;
+            }
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Example backend integration stubs
+        async function callNumVerifyAPI(phoneNumber, apiKey) {
+            // Real implementation would look like:
+            // const response = await fetch(`http://apilayer.net/api/validate?access_key=${apiKey}&number=${phoneNumber}`);
+            // return await response.json();
+            
+            return {
+                success: true,
+                valid: true,
+                number: phoneNumber,
+                local_format: phoneNumber.replace('+', '0'),
+                international_format: phoneNumber,
+                country_prefix: phoneNumber.substring(0, 3),
+                country_code: "US",
+                country_name: "United States",
+                location: "New York",
+                carrier: "AT&T Mobility",
+                line_type: "mobile"
+            };
+        }
+        
+        async function callOpenCageAPI(lat, lng, apiKey) {
+            // Real implementation would reverse geocode coordinates
+            return {
+                formatted: "New York, NY, USA",
+                components: {
+                    city: "New York",
+                    state: "New York",
+                    country: "United States"
+                }
+            };
+        }
+    </script>
+</body>
+</html>
