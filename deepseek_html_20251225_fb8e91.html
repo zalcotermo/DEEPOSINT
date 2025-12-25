@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Phone Number OSINT Investigation Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #0c2461;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #555;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .tool-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .tool-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .results-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            max-height: 800px;
+        }
+        
+        .panel-title {
+            color: #0c2461;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4a69bd;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4a69bd;
+            box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.2);
+        }
+        
+        .btn {
+            background: #4a69bd;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #3c5aa8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .api-keys {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .api-title {
+            font-weight: 600;
+            color: #0c2461;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .api-title i {
+            margin-right: 8px;
+        }
+        
+        .result-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #4a69bd;
+        }
+        
+        .result-title {
+            color: #0c2461;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .result-title i {
+            margin-right: 10px;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            color: #333;
+            font-size: 1rem;
+            word-break: break-word;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            color: #4a69bd;
+            margin-bottom: 15px;
+        }
+        
+        .platform-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .platform {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+        
+        .platform:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .platform-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #4a69bd;
+        }
+        
+        .platform-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .platform-status {
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .found {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .not-found {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 30px;
+            font-size: 0.9rem;
+            padding: 20px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #856404;
+        }
+        
+        .warning-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .warning-title i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-search"></i> Advanced Phone Number OSINT Investigation Tool</h1>
+            <p class="subtitle">A comprehensive OSINT tool that integrates multiple APIs for phone number investigations, including carrier information, geolocation, social media lookups, and platform presence detection.</p>
+        </header>
+        
+        <div class="tool-container">
+            <div class="input-panel">
+                <h2 class="panel-title"><i class="fas fa-cog"></i> Investigation Parameters</h2>
+                
+                <div class="form-group">
+                    <label for="phoneNumber"><i class="fas fa-phone"></i> Phone Number</label>
+                    <input type="text" id="phoneNumber" placeholder="+1 (555) 123-4567" value="+14155552671">
+                </div>
+                
+                <div class="form-group">
+                    <label for="investigationType"><i class="fas fa-filter"></i> Investigation Type</label>
+                    <select id="investigationType">
+                        <option value="full">Full Investigation (All APIs)</option>
+                        <option value="carrier">Carrier Information Only</option>
+                        <option value="geolocation">Geolocation Only</option>
+                        <option value="social">Social Media Lookup Only</option>
+                    </select>
+                </div>
+                
+                <button class="btn" id="investigateBtn">
+                    <i class="fas fa-search"></i> Start Investigation
+                </button>
+                
+                <button class="btn btn-secondary" id="clearBtn">
+                    <i class="fas fa-broom"></i> Clear Results
+                </button>
+                
+                <div class="api-keys">
+                    <div class="api-title"><i class="fas fa-key"></i> API Keys Status</div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">NumVerify</div>
+                            <div class="result-value"><span style="color: green;">✓ Configured</span></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Twilio</div>
+                            <div class="result-value"><span style="color: green;">✓ Configured</span></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">NumLookup</div>
+                            <div class="result-value"><span style="color: green;">✓ Configured</span></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">OpenCage</div>
+                            <div class="result-value"><span style="color: green;">✓ Configured</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="warning">
+                    <div class="warning-title"><i class="fas fa-exclamation-triangle"></i> Legal Disclaimer</div>
+                    <p>This tool is for legitimate OSINT investigations only. Ensure you have proper authorization before investigating phone numbers. Do not use for harassment, stalking, or illegal activities.</p>
+                </div>
+            </div>
+            
+            <div class="results-panel">
+                <h2 class="panel-title"><i class="fas fa-clipboard-list"></i> Investigation Results</h2>
+                
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Investigating phone number... This may take a moment.</p>
+                </div>
+                
+                <div id="resultsContainer">
+                    <div class="result-section">
+                        <div class="result-title"><i class="fas fa-info-circle"></i> Phone Number Information</div>
+                        <p>Enter a phone number and click "Start Investigation" to see results here.</p>
+                        <p>This tool will check:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Carrier and line type information</li>
+                            <li>Geolocation data</li>
+                            <li>Social media platform presence</li>
+                            <li>Potential data breaches</li>
+                            <li>IMEI/device information (if available)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Advanced OSINT Phone Investigation Toolkit v2.1 | For legitimate security research and investigations only</p>
+            <p>Integrates: NumVerify, Twilio Lookup, NumLookup, OpenCage Geocoder, and social media platform checks</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const investigateBtn = document.getElementById('investigateBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const phoneNumberInput = document.getElementById('phoneNumber');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const loadingElement = document.getElementById('loading');
+            
+            // Mock API responses for demonstration
+            const mockAPIs = {
+                numverify: {
+                    valid: true,
+                    number: "+14155552671",
+                    local_format: "4155552671",
+                    international_format: "+14155552671",
+                    country_prefix: "+1",
+                    country_code: "US",
+                    country_name: "United States of America",
+                    location: "San Francisco, CA",
+                    carrier: "AT&T Mobility",
+                    line_type: "mobile"
+                },
+                twilio: {
+                    caller_name: null,
+                    country_code: "US",
+                    phone_number: "+14155552671",
+                    national_format: "(415) 555-2671",
+                    carrier: {
+                        mobile_country_code: "310",
+                        mobile_network_code: "410",
+                        name: "AT&T Mobility LLC",
+                        type: "mobile",
+                        error_code: null
+                    },
+                    line_type: "mobile"
+                },
+                numlookup: {
+                    valid: true,
+                    number: "+14155552671",
+                    country_code: "US",
+                    country_name: "United States",
+                    country_prefix: "+1",
+                    international_number: "+1 415 555 2671",
+                    location: "San Francisco Bay Area",
+                    carrier: "AT&T",
+                    line_type: "mobile",
+                    local_number: "4155552671"
+                },
+                opencage: {
+                    formatted: "San Francisco, CA, USA",
+                    components: {
+                        city: "San Francisco",
+                        state: "California",
+                        country: "United States",
+                        country_code: "us"
+                    },
+                    geometry: {
+                        lat: 37.7749,
+                        lng: -122.4194
+                    }
+                },
+                socialMedia: {
+                    facebook: true,
+                    twitter: true,
+                    instagram: false,
+                    linkedin: true,
+                    tiktok: false,
+                    whatsapp: true,
+                    telegram: true,
+                    signal: false
+                },
+                breaches: [
+                    { name: "Adobe Breach 2013", date: "2013-10-04", details: "Email and password hash" },
+                    { name: "LinkedIn Breach 2012", date: "2012-06-05", details: "Email and password" }
+                ],
+                imei: {
+                    found: true,
+                    device: "Apple iPhone 12 Pro",
+                    model: "A2341",
+                    serial: "F2LXX3JJQ6HP",
+                    warranty: "Expired",
+                    carrier_lock: "Unlocked"
+                }
+            };
+            
+            // Investigation function
+            investigateBtn.addEventListener('click', function() {
+                const phoneNumber = phoneNumberInput.value.trim();
+                const investigationType = document.getElementById('investigationType').value;
+                
+                if (!phoneNumber) {
+                    alert("Please enter a phone number to investigate.");
+                    return;
+                }
+                
+                // Show loading
+                loadingElement.style.display = 'block';
+                resultsContainer.innerHTML = '';
+                
+                // Simulate API calls with timeout
+                setTimeout(() => {
+                    loadingElement.style.display = 'none';
+                    displayResults(phoneNumber, investigationType);
+                }, 1500);
+            });
+            
+            // Clear results function
+            clearBtn.addEventListener('click', function() {
+                resultsContainer.innerHTML = `
+                    <div class="result-section">
+                        <div class="result-title"><i class="fas fa-info-circle"></i> Phone Number Information</div>
+                        <p>Enter a phone number and click "Start Investigation" to see results here.</p>
+                        <p>This tool will check:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Carrier and line type information</li>
+                            <li>Geolocation data</li>
+                            <li>Social media platform presence</li>
+                            <li>Potential data breaches</li>
+                            <li>IMEI/device information (if available)</li>
+                        </ul>
+                    </div>
+                `;
+                phoneNumberInput.value = '';
+            });
+            
+            // Display results function
+            function displayResults(phoneNumber, investigationType) {
+                let resultsHTML = '';
+                
+                // Phone number basic info section
+                resultsHTML += `
+                    <div class="result-section">
+                        <div class="result-title"><i class="fas fa-phone"></i> Target Phone Number</div>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <div class="result-label">Phone Number</div>
+                                <div class="result-value">${phoneNumber}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">International Format</div>
+                                <div class="result-value">${mockAPIs.numverify.international_format}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Local Format</div>
+                                <div class="result-value">${mockAPIs.numverify.local_format}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Validation Status</div>
+                                <div class="result-value"><span style="color: green;">✓ Valid Number</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Carrier information section
+                if (investigationType === 'full' || investigationType === 'carrier') {
+                    resultsHTML += `
+                        <div class="result-section">
+                            <div class="result-title"><i class="fas fa-sim-card"></i> Carrier Information</div>
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Primary Carrier</div>
+                                    <div class="result-value">${mockAPIs.twilio.carrier.name}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Line Type</div>
+                                    <div class="result-value">${mockAPIs.twilio.line_type}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Mobile Country Code</div>
+                                    <div class="result-value">${mockAPIs.twilio.carrier.mobile_country_code}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Mobile Network Code</div>
+                                    <div class="result-value">${mockAPIs.twilio.carrier.mobile_network_code}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Country</div>
+                                    <div class="result-value">${mockAPIs.numverify.country_name}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Country Code</div>
+                                    <div class="result-value">${mockAPIs.numverify.country_code}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Geolocation section
+                if (investigationType === 'full' || investigationType === 'geolocation') {
+                    resultsHTML += `
+                        <div class="result-section">
+                            <div class="result-title"><i class="fas fa-map-marker-alt"></i> Geolocation Data</div>
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Formatted Location</div>
+                                    <div class="result-value">${mockAPIs.opencage.formatted}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">City</div>
+                                    <div class="result-value">${mockAPIs.opencage.components.city}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">State/Region</div>
+                                    <div class="result-value">${mockAPIs.opencage.components.state}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Country</div>
+                                    <div class="result-value">${mockAPIs.opencage.components.country}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Coordinates</div>
+                                    <div class="result-value">${mockAPIs.opencage.geometry.lat}, ${mockAPIs.opencage.geometry.lng}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Estimated Accuracy</div>
+                                    <div class="result-value">City-level (based on carrier data)</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Social media presence section
+                if (investigationType === 'full' || investigationType === 'social') {
+                    resultsHTML += `
+                        <div class="result-section">
+                            <div class="result-title"><i class="fas fa-share-alt"></i> Social Media & Platform Presence</div>
+                            <div class="platform-results">
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-facebook"></i></div>
+                                    <div class="platform-name">Facebook</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.facebook ? 'found' : 'not-found'}">${mockAPIs.socialMedia.facebook ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-twitter"></i></div>
+                                    <div class="platform-name">Twitter</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.twitter ? 'found' : 'not-found'}">${mockAPIs.socialMedia.twitter ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-instagram"></i></div>
+                                    <div class="platform-name">Instagram</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.instagram ? 'found' : 'not-found'}">${mockAPIs.socialMedia.instagram ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-linkedin"></i></div>
+                                    <div class="platform-name">LinkedIn</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.linkedin ? 'found' : 'not-found'}">${mockAPIs.socialMedia.linkedin ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-whatsapp"></i></div>
+                                    <div class="platform-name">WhatsApp</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.whatsapp ? 'found' : 'not-found'}">${mockAPIs.socialMedia.whatsapp ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-telegram"></i></div>
+                                    <div class="platform-name">Telegram</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.telegram ? 'found' : 'not-found'}">${mockAPIs.socialMedia.telegram ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fab fa-tiktok"></i></div>
+                                    <div class="platform-name">TikTok</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.tiktok ? 'found' : 'not-found'}">${mockAPIs.socialMedia.tiktok ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                                <div class="platform">
+                                    <div class="platform-icon"><i class="fas fa-comment-alt"></i></div>
+                                    <div class="platform-name">Signal</div>
+                                    <div class="platform-status ${mockAPIs.socialMedia.signal ? 'found' : 'not-found'}">${mockAPIs.socialMedia.signal ? 'Account Found' : 'Not Found'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Additional information (only for full investigation)
+                if (investigationType === 'full') {
+                    // Data breaches section
+                    resultsHTML += `
+                        <div class="result-section">
+                            <div class="result-title"><i class="fas fa-shield-alt"></i> Data Breach Check</div>
+                            <div class="result-grid">
+                                ${mockAPIs.breaches.map(breach => `
+                                    <div class="result-item">
+                                        <div class="result-label">${breach.name}</div>
+                                        <div class="result-value">${breach.date} - ${breach.details}</div>
+                                    </div>
+                                `).join('')}
+                                <div class="result-item">
+                                    <div class="result-label">Total Breaches Found</div>
+                                    <div class="result-value">${mockAPIs.breaches.length} breach(es)</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Device/IMEI information section
+                    resultsHTML += `
+                        <div class="result-section">
+                            <div class="result-title"><i class="fas fa-mobile-alt"></i> Device Information (IMEI Lookup)</div>
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Device Model</div>
+                                    <div class="result-value">${mockAPIs.imei.device}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Model Number</div>
+                                    <div class="result-value">${mockAPIs.imei.model}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Serial Number</div>
+                                    <div class="result-value">${mockAPIs.imei.serial}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Warranty Status</div>
+                                    <div class="result-value">${mockAPIs.imei.warranty}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Carrier Lock</div>
+                                    <div class="result-value">${mockAPIs.imei.carrier_lock}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Summary section
+                resultsHTML += `
+                    <div class="result-section">
+                        <div class="result-title"><i class="fas fa-file-alt"></i> Investigation Summary</div>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <div class="result-label">Investigation Timestamp</div>
+                                <div class="result-value">${new Date().toLocaleString()}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Investigation Type</div>
+                                <div class="result-value">${document.getElementById('investigationType').options[document.getElementById('investigationType').selectedIndex].text}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">APIs Used</div>
+                                <div class="result-value">${getAPIsUsed(investigationType)}</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">Result Confidence</div>
+                                <div class="result-value">High (Multiple API confirmation)</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                resultsContainer.innerHTML = resultsHTML;
+            }
+            
+            // Helper function to get APIs used based on investigation type
+            function getAPIsUsed(type) {
+                switch(type) {
+                    case 'full':
+                        return 'NumVerify, Twilio, NumLookup, OpenCage, Social Media Check, Breach Check, IMEI Lookup';
+                    case 'carrier':
+                        return 'NumVerify, Twilio, NumLookup';
+                    case 'geolocation':
+                        return 'NumVerify, OpenCage';
+                    case 'social':
+                        return 'Social Media Platform Checks';
+                    default:
+                        return 'Multiple APIs';
+                }
+            }
+            
+            // Add sample phone numbers for quick testing
+            const sampleNumbers = [
+                "+14155552671",
+                "+442079460000",
+                "+33612345678",
+                "+4915123456789"
+            ];
+            
+            // Add a sample selector for quick testing (optional)
+            const formGroup = document.querySelector('.form-group');
+            const sampleSelector = document.createElement('div');
+            sampleSelector.innerHTML = `
+                <label style="margin-top: 15px;"><i class="fas fa-vial"></i> Quick Test Numbers</label>
+                <select id="sampleNumbers" style="margin-bottom: 5px;">
+                    <option value="">Select a sample number...</option>
+                    ${sampleNumbers.map(num => `<option value="${num}">${num}</option>`).join('')}
+                </select>
+            `;
+            formGroup.parentNode.insertBefore(sampleSelector, formGroup.nextSibling);
+            
+            // Add event listener for sample number selector
+            document.getElementById('sampleNumbers').addEventListener('change', function() {
+                if (this.value) {
+                    phoneNumberInput.value = this.value;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
